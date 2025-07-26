@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My To-Do List</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f9ff;
+  padding: 20px;
+  text-align: center;
+}
+
+.todo-container {
+  max-width: 400px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.input-section {
+  margin-bottom: 20px;
+}
+
+#taskInput {
+  padding: 10px;
+  width: 70%;
+  font-size: 16px;
+}
+
+#addBtn {
+  padding: 10px 15px;
+  font-size: 16px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  background: #e0f7fa;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.completed .task-text {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+.filter-buttons {
+  margin-bottom: 20px;
+}
+
+.filter-buttons button {
+  margin: 5px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #dceefb;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.filter-buttons button:hover {
+  background-color: #90cdf4;
+}
+
+</style>
+</head>
+<body>
+<div class="todo-container">
+<h1>📝 My To-Do List</h1>
+<div class="input-section">
+<input type="text" id="taskInput" placeholder="Enter a task..." />
+<button id="addBtn">Add</button>
+</div>
+<ul id="taskList"></ul>
+</div>
+<div class="filter-buttons">
+  <button data-filter="all">All</button>
+  <button data-filter="pending">Pending</button>
+  <button data-filter="completed">Completed</button>
+</div>
+<script>
+// Selecting elements
+const taskInput = document.getElementById("taskInput");
+const addBtn = document.getElementById("addBtn");
+const taskList = document.getElementById("taskList");
+
+// Add button click event
+addBtn.addEventListener("click", () => {
+  const taskText = taskInput.value.trim();
+
+  if (taskText === "") {
+    alert("Please enter a task!");
+    return;
+  }
+
+  addTaskToList(taskText);
+  taskInput.value = ""; // clear input after adding
+});
+
+function addTaskToList(task, isCompleted = false) {
+  const li = document.createElement("li");
+  li.innerHTML = `
+    <span class="task-text">${task}</span>
+    <button class="delete-btn">❌</button>
+  `;
+
+  if (isCompleted) {
+    li.classList.add("completed");
+  }
+
+  li.querySelector(".task-text").addEventListener("click", () => {
+    li.classList.toggle("completed");
+    saveTasks(); // update localStorage when toggled
+  });
+
+  li.querySelector(".delete-btn").addEventListener("click", () => {
+    li.remove();
+    saveTasks(); // update localStorage when deleted
+  });
+
+  taskList.appendChild(li);
+  saveTasks(); // update localStorage when added
+}
+
+// Save tasks to localStorage
+function saveTasks() {
+  const tasks = [];
+
+  document.querySelectorAll("#taskList li").forEach(li => {
+    tasks.push({
+      text: li.querySelector(".task-text").innerText,
+      completed: li.classList.contains("completed")
+    });
+  });
+
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+// Load tasks on page load
+function loadTasks() {
+  const saved = JSON.parse(localStorage.getItem("tasks"));
+  if (saved) {
+    saved.forEach(task => addTaskToList(task.text, task.completed));
+  }
+}
+
+// Call loadTasks when page loads
+window.onload = loadTasks;
+
+// Filter buttons logic
+document.querySelectorAll(".filter-buttons button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const filter = btn.getAttribute("data-filter");
+
+    document.querySelectorAll("#taskList li").forEach(li => {
+      if (filter === "all") {
+        li.style.display = "flex";
+      } else if (filter === "completed") {
+        li.style.display = li.classList.contains("completed") ? "flex" : "none";
+      } else if (filter === "pending") {
+        li.style.display = li.classList.contains("completed") ? "none" : "flex";
+      }
+    });
+  });
+});
+
+</script>
+</body>
+</html>
